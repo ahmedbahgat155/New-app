@@ -1,4 +1,4 @@
- streamlit_app.p
+streamlit_app.p
 
 import streamlit as st
 
