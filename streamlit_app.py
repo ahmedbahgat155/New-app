@@ -1,62 +1,86 @@
-streamlit_app.p
-
+import pandas as pd
 import streamlit as st
+from datetime import datetime
 
-# تعريف الكلاسات
-class عميل:
-    def __init__(self, اسم, رقم_الهاتف, عنوان):
-        self.اسم = اسم
-        self.رقم_الهاتف = رقم_الهاتف
-        self.عنوان = عنوان
-        self.فواتير = []
+# إعداد المخزون الأولي
+inventory_data = {
+    'Item': ['Fabric', 'Ready-made', 'Fabric', 'Ready-made'],
+    'Type': ['Raw', 'Finished', 'Raw', 'Finished'],
+    'Quantity': [100, 50, 150, 70],
+    'Price per Unit': [20, 100, 20, 100],  # تكلفة القماش وسعر البيع للمنتجات الجاهزة
+    'Total Value': [2000, 5000, 3000, 7000]  # Total Value = Quantity * Price per Unit
+}
 
-    def إضافة_فاتورة(self, فاتورة):
-        self.فواتير.append(فاتورة)
+inventory_df = pd.DataFrame(inventory_data)
 
-class فاتورة:
-    def __init__(self, رقم_الفاتورة, تاريخ_الفاتورة, حالة_الدفع):
-        self.رقم_الفاتورة = رقم_الفاتورة
-        self.تاريخ_الفاتورة = تاريخ_الفاتورة
-        self.حالة_الدفع = حالة_الدفع
+# إعداد الفواتير
+invoices_data = {
+    'Invoice ID': [1, 2, 3],
+    'Date': [datetime(2025, 5, 1), datetime(2025, 5, 2), datetime(2025, 5, 3)],
+    'Item Sold': ['Ready-made', 'Ready-made', 'Fabric'],
+    'Quantity Sold': [2, 3, 10],
+    'Total Sale': [300, 400, 200],  # Total Sale = Quantity Sold * Price per Unit
+}
 
-# إعداد واجهة التطبيق
-st.title("إدارة الفواتير")
+invoices_df = pd.DataFrame(invoices_data)
 
-# تخزين البيانات في الجلسة لتجنب فقدانها
-if 'العملاء' not in st.session_state:
-    st.session_state['العملاء'] = []
+# خزينة رئيسية وخزينة فرعية
+cash_data = {
+    'Cash Register': ['Main Cash', 'Shipping Cash'],
+    'Amount': [10000, 2000]  # على سبيل المثال، المبالغ الموجودة في الخزائن
+}
 
-# إدخال بيانات العميل
-اسم_العميل = st.text_input("أدخل اسم العميل:")
-رقم_الهاتف = st.text_input("أدخل رقم الهاتف:")
-عنوان = st.text_input("أدخل العنوان:")
+cash_df = pd.DataFrame(cash_data)
 
-if st.button("إضافة عميل"):
-    # إضافة العميل إلى الجلسة
-    عميل_جديد = عميل(اسم_العميل, رقم_الهاتف, عنوان)
-    st.session_state['العملاء'].append(عميل_جديد)
-    st.success(f"تم إضافة العميل: {اسم_العميل}")
+# واجهة المستخدم باستخدام Streamlit
+st.title('نظام إدارة الحسابات والمخزون والمبيعات')
 
-# اختيار العميل
-اختيار_العميل = st.selectbox("اختر العميل:", [عميل.اسم for عميل in st.session_state['العملاء']])
-
-# إضافة فاتورة مبيعات
-رقم_الفاتورة = st.text_input("أدخل رقم الفاتورة:")
-تاريخ_الفاتورة = st.text_input("أدخل تاريخ الفاتورة:")
-حالة_الدفع = st.selectbox("اختر حالة الدفع:", ["مدفوعة", "مؤجلة", "غير مدفوعة"])
-
-if st.button("إضافة فاتورة"):
-    # العثور على العميل
-    العميل_المحدد = next(عميل for عميل in st.session_state['العملاء'] if عميل.اسم == اختيار_العميل)
-    فاتورة_جديدة = فاتورة(رقم_الفاتورة, تاريخ_الفاتورة, حالة_الدفع)
-    العميل_المحدد.إضافة_فاتورة(فاتورة_جديدة)
-    st.success(f"تم إضافة الفاتورة رقم {رقم_الفاتورة} للعميل {العميل_المحدد.اسم}")
+# عرض المخزون
+st.header('المخزون')
+st.dataframe(inventory_df)
 
 # عرض الفواتير
-if st.button("عرض فواتير العميل"):
-    العميل_المحدد = next(عميل for عميل in st.session_state['العملاء'] if عميل.اسم == اختيار_العميل)
-    if العميل_المحدد.فواتير:
-        for فاتورة in العميل_المحدد.فواتير:
-            st.write(f"رقم الفاتورة: {فاتورة.رقم_الفاتورة} | التاريخ: {فاتورة.تاريخ_الفاتورة} | حالة الدفع: {فاتورة.حالة_الدفع}")
+st.header('الفواتير')
+st.dataframe(invoices_df)
+
+# عرض الخزائن
+st.header('الخزائن')
+st.dataframe(cash_df)
+
+# إضافة تقرير يومي أو أسبوعي أو شهري
+st.header('تقرير مبيعات')
+report_type = st.selectbox('اختار نوع التقرير', ['يومي', 'أسبوعي', 'شهري'])
+
+# تقرير بناءً على التاريخ المحدد
+if report_type == 'يومي':
+    selected_date = st.date_input('اختار التاريخ', datetime.today())
+    daily_report = invoices_df[invoices_df['Date'] == pd.to_datetime(selected_date)]
+    st.write('تقرير المبيعات اليومي:', daily_report)
+elif report_type == 'أسبوعي':
+    start_date = st.date_input('اختار بداية الأسبوع', datetime.today() - pd.Timedelta(days=7))
+    end_date = st.date_input('اختار نهاية الأسبوع', datetime.today())
+    weekly_report = invoices_df[(invoices_df['Date'] >= pd.to_datetime(start_date)) & 
+                                 (invoices_df['Date'] <= pd.to_datetime(end_date))]
+    st.write('تقرير المبيعات الأسبوعي:', weekly_report)
+else:
+    start_date = st.date_input('اختار بداية الشهر', datetime.today().replace(day=1))
+    end_date = st.date_input('اختار نهاية الشهر', datetime.today())
+    monthly_report = invoices_df[(invoices_df['Date'] >= pd.to_datetime(start_date)) & 
+                                 (invoices_df['Date'] <= pd.to_datetime(end_date))]
+    st.write('تقرير المبيعات الشهري:', monthly_report)
+
+# إضافة خزينة
+st.header('إضافة عملية مالية')
+cash_action = st.selectbox('اختار نوع العملية', ['إيداع', 'سحب'])
+
+amount = st.number_input('المبلغ', min_value=0, step=100)
+
+if st.button('تنفيذ العملية'):
+    if cash_action == 'إيداع':
+        cash_df.loc[cash_df['Cash Register'] == 'Main Cash', 'Amount'] += amount
+        st.success(f'تم إضافة {amount} إلى الخزينة الرئيسية.')
     else:
-        st.write("لا توجد فواتير لهذا العميل.")
+        cash_df.loc[cash_df['Cash Register'] == 'Main Cash', 'Amount'] -= amount
+        st.success(f'تم سحب {amount} من الخزينة الرئيسية.')
+
+st.dataframe(cash_df)
